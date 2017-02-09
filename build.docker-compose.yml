@@ -1,0 +1,12 @@
+version: "2"
+services:
+    build:
+        image: golang:1.7-onbuild
+        command: make build
+        volumes: 
+            - ./src:/go/src/app/src
+            - ./bin:/go/src/app/bin
+            - ./build.Makefile:/go/src/app/Makefile
+        environment:
+            VERSION: ${VERSION}
+            DATE: ${DATE}

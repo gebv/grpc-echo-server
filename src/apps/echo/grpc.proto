@@ -1,6 +1,3 @@
-# grpc-echo-server
-
-``` proto3
 syntax = "proto3";
 
 package echo;
@@ -13,4 +10,3 @@ message EchoDTO {
   string str = 1;
   bytes raw = 2;
 }
-```
