@@ -6,7 +6,7 @@ protobufgen:
 
 build:
 	CGO_ENABLED=0 GOPATH=/go/src/app go build \
-	    -o ./bin/grps-server \
+	    -o ./bin/grpc-server \
 		-v \
 		-a ./src/cmd/grpc-server/main.go
 .PHONY: build

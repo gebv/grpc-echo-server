@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"net"
 	"os"
@@ -14,20 +13,16 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-var flagPort = flag.String(
-	"port",
-	"48655",
-	"grpc port",
-)
-
 func main() {
-	flag.Parse()
-
 	serverSignal := make(chan struct{}, 1)
 
 	// rpc server
 	go func() {
-		addr := ":" + *flagPort
+		port := os.Getenv("PORT")
+		if port == "" {
+			port = "48655"
+		}
+		addr := ":" + port
 		log.Printf("setup rpc server, address=%s\n", addr)
 
 		tcp, err := net.Listen("tcp", addr)

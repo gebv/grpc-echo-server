@@ -10,6 +10,10 @@ It is generated from these files:
 
 It has these top-level messages:
 	EchoDTO
+	LatLng
+	TrackInfo
+	StreamChatRequest
+	ChatMessage
 */
 package echo
 
@@ -57,8 +61,84 @@ func (m *EchoDTO) GetRaw() []byte {
 	return nil
 }
 
+type LatLng struct {
+	Lat float64 `protobuf:"fixed64,1,opt,name=lat" json:"lat,omitempty"`
+	Lng float64 `protobuf:"fixed64,2,opt,name=lng" json:"lng,omitempty"`
+}
+
+func (m *LatLng) Reset()                    { *m = LatLng{} }
+func (m *LatLng) String() string            { return proto.CompactTextString(m) }
+func (*LatLng) ProtoMessage()               {}
+func (*LatLng) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *LatLng) GetLat() float64 {
+	if m != nil {
+		return m.Lat
+	}
+	return 0
+}
+
+func (m *LatLng) GetLng() float64 {
+	if m != nil {
+		return m.Lng
+	}
+	return 0
+}
+
+type TrackInfo struct {
+	Id int32 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+}
+
+func (m *TrackInfo) Reset()                    { *m = TrackInfo{} }
+func (m *TrackInfo) String() string            { return proto.CompactTextString(m) }
+func (*TrackInfo) ProtoMessage()               {}
+func (*TrackInfo) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *TrackInfo) GetId() int32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type StreamChatRequest struct {
+	Id int32 `protobuf:"varint,1,opt,name=id" json:"id,omitempty"`
+}
+
+func (m *StreamChatRequest) Reset()                    { *m = StreamChatRequest{} }
+func (m *StreamChatRequest) String() string            { return proto.CompactTextString(m) }
+func (*StreamChatRequest) ProtoMessage()               {}
+func (*StreamChatRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *StreamChatRequest) GetId() int32 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+type ChatMessage struct {
+	Text string `protobuf:"bytes,1,opt,name=text" json:"text,omitempty"`
+}
+
+func (m *ChatMessage) Reset()                    { *m = ChatMessage{} }
+func (m *ChatMessage) String() string            { return proto.CompactTextString(m) }
+func (*ChatMessage) ProtoMessage()               {}
+func (*ChatMessage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *ChatMessage) GetText() string {
+	if m != nil {
+		return m.Text
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EchoDTO)(nil), "echo.EchoDTO")
+	proto.RegisterType((*LatLng)(nil), "echo.LatLng")
+	proto.RegisterType((*TrackInfo)(nil), "echo.TrackInfo")
+	proto.RegisterType((*StreamChatRequest)(nil), "echo.StreamChatRequest")
+	proto.RegisterType((*ChatMessage)(nil), "echo.ChatMessage")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -73,6 +153,8 @@ const _ = grpc.SupportPackageIsVersion4
 
 type ServerClient interface {
 	Echo(ctx context.Context, in *EchoDTO, opts ...grpc.CallOption) (*EchoDTO, error)
+	Track(ctx context.Context, opts ...grpc.CallOption) (Server_TrackClient, error)
+	ChatStream(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (Server_ChatStreamClient, error)
 }
 
 type serverClient struct {
@@ -92,10 +174,78 @@ func (c *serverClient) Echo(ctx context.Context, in *EchoDTO, opts ...grpc.CallO
 	return out, nil
 }
 
+func (c *serverClient) Track(ctx context.Context, opts ...grpc.CallOption) (Server_TrackClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Server_serviceDesc.Streams[0], c.cc, "/echo.Server/Track", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &serverTrackClient{stream}
+	return x, nil
+}
+
+type Server_TrackClient interface {
+	Send(*LatLng) error
+	CloseAndRecv() (*TrackInfo, error)
+	grpc.ClientStream
+}
+
+type serverTrackClient struct {
+	grpc.ClientStream
+}
+
+func (x *serverTrackClient) Send(m *LatLng) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *serverTrackClient) CloseAndRecv() (*TrackInfo, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(TrackInfo)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *serverClient) ChatStream(ctx context.Context, in *StreamChatRequest, opts ...grpc.CallOption) (Server_ChatStreamClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Server_serviceDesc.Streams[1], c.cc, "/echo.Server/ChatStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &serverChatStreamClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Server_ChatStreamClient interface {
+	Recv() (*ChatMessage, error)
+	grpc.ClientStream
+}
+
+type serverChatStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *serverChatStreamClient) Recv() (*ChatMessage, error) {
+	m := new(ChatMessage)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // Server API for Server service
 
 type ServerServer interface {
 	Echo(context.Context, *EchoDTO) (*EchoDTO, error)
+	Track(Server_TrackServer) error
+	ChatStream(*StreamChatRequest, Server_ChatStreamServer) error
 }
 
 func RegisterServerServer(s *grpc.Server, srv ServerServer) {
@@ -120,6 +270,53 @@ func _Server_Echo_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Server_Track_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ServerServer).Track(&serverTrackServer{stream})
+}
+
+type Server_TrackServer interface {
+	SendAndClose(*TrackInfo) error
+	Recv() (*LatLng, error)
+	grpc.ServerStream
+}
+
+type serverTrackServer struct {
+	grpc.ServerStream
+}
+
+func (x *serverTrackServer) SendAndClose(m *TrackInfo) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *serverTrackServer) Recv() (*LatLng, error) {
+	m := new(LatLng)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _Server_ChatStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(StreamChatRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ServerServer).ChatStream(m, &serverChatStreamServer{stream})
+}
+
+type Server_ChatStreamServer interface {
+	Send(*ChatMessage) error
+	grpc.ServerStream
+}
+
+type serverChatStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *serverChatStreamServer) Send(m *ChatMessage) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _Server_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "echo.Server",
 	HandlerType: (*ServerServer)(nil),
@@ -129,21 +326,40 @@ var _Server_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Server_Echo_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Track",
+			Handler:       _Server_Track_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "ChatStream",
+			Handler:       _Server_ChatStream_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "src/apps/echo/grpc.proto",
 }
 
 func init() { proto.RegisterFile("src/apps/echo/grpc.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 129 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xe2, 0x92, 0x28, 0x2e, 0x4a, 0xd6,
-	0x4f, 0x2c, 0x28, 0x28, 0xd6, 0x4f, 0x4d, 0xce, 0xc8, 0xd7, 0x4f, 0x2f, 0x2a, 0x48, 0xd6, 0x2b,
-	0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x01, 0x09, 0x28, 0xe9, 0x72, 0xb1, 0xbb, 0x26, 0x67, 0xe4,
-	0xbb, 0x84, 0xf8, 0x0b, 0x09, 0x70, 0x31, 0x17, 0x97, 0x14, 0x49, 0x30, 0x2a, 0x30, 0x6a, 0x70,
-	0x06, 0x81, 0x98, 0x20, 0x91, 0xa2, 0xc4, 0x72, 0x09, 0x26, 0x05, 0x46, 0x0d, 0x9e, 0x20, 0x10,
-	0xd3, 0xc8, 0x80, 0x8b, 0x2d, 0x38, 0xb5, 0xa8, 0x2c, 0xb5, 0x48, 0x48, 0x8d, 0x8b, 0x05, 0xa4,
-	0x51, 0x88, 0x57, 0x0f, 0x64, 0x8e, 0x1e, 0xd4, 0x10, 0x29, 0x54, 0xae, 0x12, 0x43, 0x12, 0x1b,
-	0xd8, 0x36, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0x16, 0x4b, 0xef, 0x9e, 0x89, 0x00, 0x00,
-	0x00,
+	// 270 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x64, 0x90, 0xcd, 0x4e, 0xc3, 0x30,
+	0x10, 0x84, 0xe3, 0x90, 0x06, 0x75, 0x29, 0x3f, 0xdd, 0x0b, 0x51, 0xb8, 0x14, 0x23, 0xa1, 0x08,
+	0x41, 0x82, 0xe0, 0xca, 0x0d, 0x38, 0x20, 0x15, 0x21, 0xa5, 0x7d, 0x01, 0x93, 0x1a, 0xa7, 0x02,
+	0xe2, 0x60, 0x9b, 0x9f, 0x67, 0xe1, 0x69, 0xd1, 0xda, 0x15, 0x02, 0xf5, 0x36, 0x3b, 0x33, 0x87,
+	0x6f, 0x16, 0x32, 0x6b, 0x9a, 0x4a, 0xf4, 0xbd, 0xad, 0x64, 0xd3, 0xea, 0x4a, 0x99, 0xbe, 0x29,
+	0x7b, 0xa3, 0x9d, 0xc6, 0x84, 0x0c, 0x7e, 0x06, 0x9b, 0xb7, 0x4d, 0xab, 0x6f, 0xe6, 0x0f, 0xb8,
+	0x07, 0x1b, 0xd6, 0x99, 0x8c, 0x4d, 0x58, 0x31, 0xac, 0x49, 0x92, 0x63, 0xc4, 0x67, 0x16, 0x4f,
+	0x58, 0x31, 0xaa, 0x49, 0xf2, 0x53, 0x48, 0xa7, 0xc2, 0x4d, 0x3b, 0x45, 0xd9, 0x8b, 0x70, 0xbe,
+	0xcd, 0x6a, 0x92, 0xde, 0xe9, 0x94, 0x6f, 0x93, 0xd3, 0x29, 0x7e, 0x00, 0xc3, 0xb9, 0x11, 0xcd,
+	0xf3, 0x5d, 0xf7, 0xa4, 0x71, 0x07, 0xe2, 0xe5, 0xc2, 0xf7, 0x07, 0x75, 0xbc, 0x5c, 0xf0, 0x23,
+	0x18, 0xcf, 0x9c, 0x91, 0xe2, 0xf5, 0xba, 0x15, 0xae, 0x96, 0x6f, 0xef, 0xd2, 0xba, 0xb5, 0xd2,
+	0x21, 0x6c, 0x51, 0x7c, 0x2f, 0xad, 0x15, 0x4a, 0x22, 0x42, 0xe2, 0xe4, 0x97, 0x5b, 0x31, 0x7a,
+	0x7d, 0xf1, 0xcd, 0x20, 0x9d, 0x49, 0xf3, 0x21, 0x0d, 0x1e, 0x43, 0x42, 0x63, 0x70, 0xbb, 0xa4,
+	0x6d, 0xe5, 0x6a, 0x58, 0xfe, 0xff, 0xe4, 0x11, 0x9e, 0xc0, 0xc0, 0x73, 0xe1, 0x28, 0x24, 0x61,
+	0x52, 0xbe, 0x1b, 0xae, 0x5f, 0x64, 0x1e, 0x15, 0x0c, 0xaf, 0x00, 0x88, 0x20, 0xa0, 0xe2, 0x7e,
+	0xa8, 0xac, 0x81, 0xe7, 0xe3, 0x10, 0xfc, 0x81, 0xe5, 0xd1, 0x39, 0x7b, 0x4c, 0xfd, 0xaf, 0x2f,
+	0x7f, 0x02, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x53, 0x5c, 0x59, 0x87, 0x01, 0x00, 0x00,
 }
