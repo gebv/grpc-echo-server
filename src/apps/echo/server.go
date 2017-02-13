@@ -30,6 +30,7 @@ func (s *EchoServer) Echo(_ context.Context, dto *EchoDTO) (*EchoDTO, error) {
 }
 
 func (s *EchoServer) Track(stream Server_TrackServer) error {
+	s.logger.Println("\t+\t[Track] start")
 	for {
 		track, err := stream.Recv()
 		if err == io.EOF {
@@ -37,9 +38,11 @@ func (s *EchoServer) Track(stream Server_TrackServer) error {
 		}
 		if err != nil {
 			s.logger.Printf("[Track] err %v\n", err)
+			break
 		}
 		s.logger.Printf("\t+\t[Track] %v\n", track)
 	}
+	s.logger.Println("\t+\t[Track] end")
 	return nil
 }
 
