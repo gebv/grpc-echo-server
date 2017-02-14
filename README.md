@@ -7,10 +7,27 @@ package echo;
 
 service Server {
   rpc Echo (EchoDTO) returns (EchoDTO) {}
+  rpc Track(stream LatLng) returns (TrackInfo) {}
+  rpc ChatStream(StreamChatRequest) returns (stream ChatMessage){}
 }
 
 message EchoDTO {
   string str = 1;
   bytes raw = 2;
+}
+
+message LatLng {
+  double lat = 1;
+  double lng = 2;
+}
+message TrackInfo {
+  int32 id = 1;
+}
+
+message StreamChatRequest {
+  int32 id = 1;
+}
+message ChatMessage {
+  string text = 1;
 }
 ```
