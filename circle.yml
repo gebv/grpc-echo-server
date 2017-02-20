@@ -1,0 +1,25 @@
+machine:
+  services:
+    - docker
+
+
+dependencies:
+  override:
+    - docker info
+    - curl https://glide.sh/get | sh
+    - cd src && glide up
+    
+test:
+  override:
+    - echo "run tests"
+
+compile:
+  override:
+    - docker-compose -f build.docker-compose.yml up build
+
+
+deployment:
+  release:
+    commands:
+      - ls -la
+      - ls -la ./bin
