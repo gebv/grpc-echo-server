@@ -1,4 +1,6 @@
 machine:
+  pre:
+    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
   services:
     - docker
     
@@ -16,7 +18,9 @@ test:
     
 compile:
   override:
-    - docker-compose -f build.docker-compose.yml up build
+    - docker run --rm \
+    -v "$PWD":/usr/src/app \
+    -w /usr/src/app golang:1.7-onbuild make build
     
 
 deployment:
