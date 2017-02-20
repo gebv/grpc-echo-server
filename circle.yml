@@ -1,7 +1,7 @@
 machine:
   services:
     - docker
-
+    
 
 dependencies:
   override:
@@ -12,14 +12,15 @@ dependencies:
 test:
   override:
     - echo "run tests"
-
+    
 compile:
   override:
     - docker-compose -f build.docker-compose.yml up build
-
+    
 
 deployment:
   release:
+    tag: /[0-9]+(\.[0-9]+)*/
     commands:
       - ls -la
       - ls -la ./bin
