@@ -6,8 +6,9 @@ machine:
 dependencies:
   override:
     - docker info
-    - curl https://glide.sh/get | sh
-    - cd src && glide up
+    - docker version
+#    - curl https://glide.sh/get | sh
+#    - cd src && glide up
     
 test:
   override:
